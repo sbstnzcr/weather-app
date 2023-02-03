@@ -32,11 +32,16 @@ class WeatherListView(CreateAPIView):
         return Response(weather_data)
 
 class WeatherDetailView(APIView):
-    now = datetime.datetime.now()
-    # queryset = Weather.objects.filter(created_at__lte=now, created_at__gt=now-datetime.timedelta(days=7)).values()
-    queryset = Weather.objects.all()
     serializer_class = WeatherSerializer
 
     def get(self, request):
-        print(request.data)
+        now = datetime.datetime.now()
+        city = request.form.get('city')
+        avg = Weather.objects.filter(created_at__lte=now, created_at__gt=now-datetime.timedelta(days=7)).aggregate(Avg('temperature'))
+        r = requests.get(url.format(city)).json()
+        data = {
+            'temperature': r['main']['temp'],
+            'avg': avg,
+            }
 
+        return Response(data)
